@@ -36,7 +36,14 @@ Model::Model(ShaderProgram *shaderProgram, string name, vec3 position) {
 	this->position = position;
 }
 
-Model::~Model(void) {}
+Model::~Model(void) {
+	// VBO
+	glDeleteBuffers(1, &verticesBuffer);
+	glDeleteBuffers(1, &uvsBuffer);
+	glDeleteBuffers(1, &normalsBuffer);
+
+	glDeleteVertexArrays(1, &vao);		// VAO
+}
 
 void Model::draw(ShaderProgram *shaderProgram) {
 	modelMatrix = translate(mat4(1.0f), position); 
@@ -50,8 +57,59 @@ void Model::draw(ShaderProgram *shaderProgram) {
 	glBindVertexArray(0);
 }
 
+void Model::setupVAO(ShaderProgram *shaderProgram) {
+	//Procedura tworz¹ca VAO - "obiekt" OpenGL wi¹¿¹cy numery slotów atrybutów z buforami VBO
 
+	//Pobierz numery slotów poszczególnych atrybutów
+	GLuint locVertex = shaderProgram->getAttribLocation("vertex");		// "vertex" odnosi siê do deklaracji "in vec4 vertex;" w vertex shaderze
+	GLuint locColor	 = shaderProgram->getAttribLocation("color");		// "color" odnosi siê do deklaracji "in vec4 color;" w vertex shaderze
+	GLuint locNormal = shaderProgram->getAttribLocation("normal");		// "normal" odnosi siê do deklaracji "in vec4 normal;" w vertex shaderze
 
+	//Wygeneruj uchwyt na VAO i zapisz go do zmiennej globalnej
+	glGenVertexArrays(1,&vao);
+
+	//Uaktywnij nowo utworzony VAO
+	glBindVertexArray(vao);
+
+	glBindBuffer(GL_ARRAY_BUFFER, verticesBuffer);  //Uaktywnij wygenerowany uchwyt VBO 
+	glEnableVertexAttribArray(locVertex); //W³¹cz u¿ywanie atrybutu o numerze slotu zapisanym w zmiennej locVertex (atrybut "vertex")
+	glVertexAttribPointer(locVertex, 3, GL_FLOAT, GL_FALSE, 0, NULL); //Dane do slotu locVertex maj¹ byæ brane z aktywnego VBO
+	
+	glBindBuffer(GL_ARRAY_BUFFER, uvsBuffer);  //Uaktywnij wygenerowany uchwyt VBO 
+	glEnableVertexAttribArray(locColor); //W³¹cz u¿ywanie atrybutu o numerze slotu zapisanym w zmiennej locColor (atrybut "color")
+	glVertexAttribPointer(locColor, 2, GL_FLOAT, GL_FALSE, 0, NULL); //Dane do slotu locColor maj¹ byæ brane z aktywnego VBO
+
+	glBindBuffer(GL_ARRAY_BUFFER, normalsBuffer);  //Uaktywnij wygenerowany uchwyt VBO 
+	glEnableVertexAttribArray(locNormal); //W³¹cz u¿ywanie atrybutu o numerze slotu zapisanym w zmiennej locNormal (atrybut "normal")
+	glVertexAttribPointer(locNormal, 3, GL_FLOAT, GL_FALSE, 0, NULL); //Dane do slotu locNormal maj¹ byæ brane z aktywnego VBO
+
+	glBindVertexArray(0);
+}
+
+void Model::setupVBO(void) {
+	//Procedura tworz¹ca bufory VBO zawieraj¹ce dane z tablic opisuj¹cych rysowany obiekt.
+	//Wybór rysowanego modelu (poprzez zakomentowanie/odkomentowanie fragmentu kodu)
+	/*vertices = cubeVertices;
+	colors = cubeColors;
+	normals = cubeNormals;
+	vertexCount = cubeVertexCount;*/
+
+	//Wspó³rzêdne wierzcho³ków
+	glGenBuffers(1, &verticesBuffer);//Wygeneruj uchwyt na Vertex Buffer Object (VBO), który bêdzie zawiera³ tablicê wierzcho³ków
+	glBindBuffer(GL_ARRAY_BUFFER, verticesBuffer);  //Uaktywnij wygenerowany uchwyt VBO 
+	glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(vec3), &vertices[0], GL_STATIC_DRAW); //wgraj tablicê wierzcho³ków do VBO
+	
+	//Kolory wierzcho³ków
+	glGenBuffers(1, &uvsBuffer);//Wygeneruj uchwyt na Vertex Buffer Object (VBO), który bêdzie zawiera³ tablicê kolorów
+	glBindBuffer(GL_ARRAY_BUFFER, uvsBuffer);  //Uaktywnij wygenerowany uchwyt VBO 
+	glBufferData(GL_ARRAY_BUFFER, uvs.size() * sizeof(vec2), &uvs[0], GL_STATIC_DRAW); //wgraj tablicê kolorów do VBO
+	
+	//Wektory normalne wierzcho³ków
+	glGenBuffers(1, &normalsBuffer);//Wygeneruj uchwyt na Vertex Buffer Object (VBO), który bêdzie zawiera³ tablicê wektorów normalnych
+	glBindBuffer(GL_ARRAY_BUFFER, normalsBuffer);  //Uaktywnij wygenerowany uchwyt VBO 
+	glBufferData(GL_ARRAY_BUFFER, normals.size() * sizeof(vec3), &normals[0], GL_STATIC_DRAW); //wgraj tablicê wektorów normalnych do VBO
+	
+}
 
 bool Model::loadOBJ(const char *path, vector<vec3> &out_vertices, vector<vec2> &out_uvs, vector<vec3> &out_normals)
 {
@@ -140,60 +198,6 @@ bool Model::loadOBJ(const char *path, vector<vec3> &out_vertices, vector<vec2> &
 	return true;
 }
 
-void Model::setupVAO(ShaderProgram *shaderProgram) {
-	//Procedura tworz¹ca VAO - "obiekt" OpenGL wi¹¿¹cy numery slotów atrybutów z buforami VBO
-
-	//Pobierz numery slotów poszczególnych atrybutów
-	GLuint locVertex = shaderProgram->getAttribLocation("vertex");		// "vertex" odnosi siê do deklaracji "in vec4 vertex;" w vertex shaderze
-	GLuint locColor	 = shaderProgram->getAttribLocation("color");		// "color" odnosi siê do deklaracji "in vec4 color;" w vertex shaderze
-	GLuint locNormal = shaderProgram->getAttribLocation("normal");		// "normal" odnosi siê do deklaracji "in vec4 normal;" w vertex shaderze
-
-	//Wygeneruj uchwyt na VAO i zapisz go do zmiennej globalnej
-	glGenVertexArrays(1,&vao);
-
-	//Uaktywnij nowo utworzony VAO
-	glBindVertexArray(vao);
-
-	glBindBuffer(GL_ARRAY_BUFFER, verticesBuffer);  //Uaktywnij wygenerowany uchwyt VBO 
-	glEnableVertexAttribArray(locVertex); //W³¹cz u¿ywanie atrybutu o numerze slotu zapisanym w zmiennej locVertex (atrybut "vertex")
-	glVertexAttribPointer(locVertex, 3, GL_FLOAT, GL_FALSE, 0, NULL); //Dane do slotu locVertex maj¹ byæ brane z aktywnego VBO
-	
-	glBindBuffer(GL_ARRAY_BUFFER, uvsBuffer);  //Uaktywnij wygenerowany uchwyt VBO 
-	glEnableVertexAttribArray(locColor); //W³¹cz u¿ywanie atrybutu o numerze slotu zapisanym w zmiennej locColor (atrybut "color")
-	glVertexAttribPointer(locColor, 2, GL_FLOAT, GL_FALSE, 0, NULL); //Dane do slotu locColor maj¹ byæ brane z aktywnego VBO
-
-	glBindBuffer(GL_ARRAY_BUFFER, normalsBuffer);  //Uaktywnij wygenerowany uchwyt VBO 
-	glEnableVertexAttribArray(locNormal); //W³¹cz u¿ywanie atrybutu o numerze slotu zapisanym w zmiennej locNormal (atrybut "normal")
-	glVertexAttribPointer(locNormal, 3, GL_FLOAT, GL_FALSE, 0, NULL); //Dane do slotu locNormal maj¹ byæ brane z aktywnego VBO
-
-	glBindVertexArray(0);
-}
-
-void Model::setupVBO(void) {
-	//Procedura tworz¹ca bufory VBO zawieraj¹ce dane z tablic opisuj¹cych rysowany obiekt.
-	//Wybór rysowanego modelu (poprzez zakomentowanie/odkomentowanie fragmentu kodu)
-	/*vertices = cubeVertices;
-	colors = cubeColors;
-	normals = cubeNormals;
-	vertexCount = cubeVertexCount;*/
-
-	//Wspó³rzêdne wierzcho³ków
-	glGenBuffers(1, &verticesBuffer);//Wygeneruj uchwyt na Vertex Buffer Object (VBO), który bêdzie zawiera³ tablicê wierzcho³ków
-	glBindBuffer(GL_ARRAY_BUFFER, verticesBuffer);  //Uaktywnij wygenerowany uchwyt VBO 
-	glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(vec3), &vertices[0], GL_STATIC_DRAW); //wgraj tablicê wierzcho³ków do VBO
-	
-	//Kolory wierzcho³ków
-	glGenBuffers(1, &uvsBuffer);//Wygeneruj uchwyt na Vertex Buffer Object (VBO), który bêdzie zawiera³ tablicê kolorów
-	glBindBuffer(GL_ARRAY_BUFFER, uvsBuffer);  //Uaktywnij wygenerowany uchwyt VBO 
-	glBufferData(GL_ARRAY_BUFFER, uvs.size() * sizeof(vec2), &uvs[0], GL_STATIC_DRAW); //wgraj tablicê kolorów do VBO
-	
-	//Wektory normalne wierzcho³ków
-	glGenBuffers(1, &normalsBuffer);//Wygeneruj uchwyt na Vertex Buffer Object (VBO), który bêdzie zawiera³ tablicê wektorów normalnych
-	glBindBuffer(GL_ARRAY_BUFFER, normalsBuffer);  //Uaktywnij wygenerowany uchwyt VBO 
-	glBufferData(GL_ARRAY_BUFFER, normals.size() * sizeof(vec3), &normals[0], GL_STATIC_DRAW); //wgraj tablicê wektorów normalnych do VBO
-	
-}
-
 bool Model::loadBMP(const char *imagepath){
 
 	//printf("Reading image %s\n", imagepath);
@@ -269,4 +273,12 @@ bool Model::loadBMP(const char *imagepath){
 	// Return the ID of the texture we just created
     this->Texture = textureID;
     return true;
+}
+
+GLbyte* loadTGA(char *fileName, GLint *width, GLint *height, GLint *components, GLenum *format) {
+	FILE *file = 0;				// wskaŸnik na plik
+	TGAHEADER tgaHeader;	// nag³ówek pliku TGA
+	unsigned long imageSize;
+	short depth;
+	GLbyte *bits = NULL;
 }

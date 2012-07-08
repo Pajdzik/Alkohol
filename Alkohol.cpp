@@ -12,9 +12,8 @@ void initOpenGL(float, int, int);
 void initModels(void);
 void setupShaders(void);
 
+void cleanModels(void);
 void cleanShaders(void);
-void freeVAO(void);
-void freeVBO(void);
 
 void changeSize(int, int);
 void displayFrame(void);
