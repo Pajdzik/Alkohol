@@ -34,7 +34,7 @@ void displayFrame(void) {
 	
 	drawObject();
 	
-	glutSwapBuffers();	// tylny bufor na przedni
+	glutSwapBuffers();	
 }
 
 void drawObject(void) {
@@ -125,7 +125,7 @@ void initOpenGL(float angle, int width, int height) {
 }
 
 void initModels(void) {
-	model = new Model(shaderProgram, "models/becherovka3.obj", NULL);
+	model = new Model(shaderProgram, "becherovka", vec3(0.0f, 0.0f, 0.0f));
 }
 
 void cleanModels(void) {
@@ -138,7 +138,6 @@ int main(int argc, char* argv[]) {
 	initOpenGL(observer.fieldOfView, windowWidth, windowHeight);
 	initModels();
 	
-
 	glutMainLoop();
 
 	cleanShaders();

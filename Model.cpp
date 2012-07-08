@@ -6,28 +6,42 @@
 using namespace std;
 using namespace glm;
 
-Model::Model(ShaderProgram *shaderProgram, const char *modelPath, const char* texturePath) {
+Model::Model(ShaderProgram *shaderProgram, string name, vec3 position) {
 	bool b = false;
 
-	printf("Loading %s\n", modelPath);
+	string modelPath= "models/";
+	modelPath.append(name);
+
+	printf("Loading %s\n",  name.c_str());
 
 	printf("\t Model...");
-	b = loadOBJ(modelPath, vertices, uvs, normals);
+	b = loadOBJ(modelPath.append(".obj").c_str(), vertices, uvs, normals);
 
 	if (b == true)	printf(" done!\n");
 	else			printf(" ERROR!\n");
 	
+
+	printf("\t Texture...");
+
+
+	if (b == true)	printf(" done!\n");
+	else			printf(" ERROR!\n");
+
+
 	setupVBO();
 	setupVAO(shaderProgram);
 
 	angle = 10.0f;
+
+	this->position = position;
 }
 
 Model::~Model(void) {}
 
 void Model::draw(ShaderProgram *shaderProgram) {
-	modelMatrix = rotate(mat4(1.0f), angle, vec3(0.5f, 1.0f, 0.0f)); 
-	//modelMatrix = translate(modelMatrix, vec3(0.0f, 2.0f, -13.0f)); 
+	modelMatrix = translate(mat4(1.0f), position); 
+	modelMatrix = rotate(modelMatrix, angle, vec3(0.5f, 1.0f, 0.0f)); 
+	
 
 	glUniformMatrix4fv(shaderProgram->getUniformLocation("M"), 1, false, value_ptr(modelMatrix));
 

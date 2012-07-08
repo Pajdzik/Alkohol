@@ -8,8 +8,10 @@ using namespace glm;
 
 class Model {
 public:
-	Model(ShaderProgram *shaderProgram, const char *modelPath, const char* texturePath);
+	Model(ShaderProgram *shaderProgram, string name, vec3 position);
 	~Model(void);
+
+	vec3 position;
 
 	vector<vec3> vertices;
 	vector<vec3> normals;
@@ -26,17 +28,11 @@ public:
 
 	// uchwyty na VAO i bufory wierzcho³ków
 	GLuint	vao;
-	GLuint	verticesBuffer;	// uchwyt na bufor VBO przechowuj¹cy tablicê wspó³rzêdnych wierzcho³ków
-	GLuint	uvsBuffer;		// uchwyt na bufor VBO przechowuj¹cy tablicê kolorów
-	GLuint	normalsBuffer;		// uchwyt na bufor VBO przechowuj¹cy tablicê wektorów normalnych
+	GLuint	verticesBuffer;			// uchwyt na bufor VBO przechowuj¹cy tablicê wspó³rzêdnych wierzcho³ków
+	GLuint	uvsBuffer;				// uchwyt na bufor VBO przechowuj¹cy tablicê kolorów
+	GLuint	normalsBuffer;			// uchwyt na bufor VBO przechowuj¹cy tablicê wektorów normalnych
 
 	float angle;
-
-	//"Model" który rysujemy
-	/*float *vertices;
-	float *colors;
-	float *normals;*/
-	int vertexCount;
 
 	mat4 modelMatrix;
 };
