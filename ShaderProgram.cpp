@@ -104,7 +104,7 @@ GLuint ShaderProgram::loadShader(GLenum shaderType, char* fileName) {
 	return shader;
 }
 
-void ShaderProgram::use() {
+void ShaderProgram::use(void) {
 	// w³¹cz u¿ywanie programu cieniuj¹cego reprezentowanego przez aktualny obiekt
 	glUseProgram(shaderProgram);
 }

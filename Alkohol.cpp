@@ -37,8 +37,9 @@ void displayFrame(void) {
 }
 
 void drawObject(void) {
+	models[0]->draw(shaderProgram);
+	models[1]->draw(shaderProgram);
 	
-	model->draw(shaderProgram);
 }
 
 void nextFrame(void) {
@@ -47,33 +48,67 @@ void nextFrame(void) {
 	int interval = actTime - lastTime;
 
 	lastTime = actTime;
-	model->angle += speed * interval / 1000.0;
-	if (model->angle > 360) model->angle = 0.0f;
+	models[0]->angle += speed * interval / 1000.0;
 
 	glutPostRedisplay();
 }
 
 void keyDown(unsigned char c, int x, int y) {
-	observer.move(c);
+	const float speed = 0.01f;
+
+	switch (c) {
+	case 'a':	// lewo
+	case 'A':
+		observer.strafe(-speed);
+		break;
+
+	case 'd':	// prawo
+	case 'D':
+		observer.strafe(speed);
+		break;
+
+	case 's':	// ty³
+	case 'S':
+		observer.move(-speed);
+		break;
+
+	case 'w':	// przód
+	case 'W':
+		observer.move(speed);
+		break;
+	}
 }
 
 void mouseMove(int x, int y) {
-	const float step = 0.003;
+	const unsigned char strip = 180;
 
-	if (x < 100) {			// lewa strona ekranu
-		observer.mouseStep.first = -step;
-	} else if (x > 500) {	// prawa strona ekranu
-		observer.mouseStep.first = step;
+	if (x < strip) {			// lewa strona ekranu
+		observer.mouseStep.first = (float) -(windowWidth - x) / 10000;
+	} else if (x > (windowWidth - strip)) {	// prawa strona ekranu
+		observer.mouseStep.first = (float) x / 10000;
 	} else {
 		observer.mouseStep.first = 0.0f;
 	}
 
-	if (y < 100) {			// góra ekranu
-		observer.mouseStep.second = step;
-	} else if (y > 500) {	// dó³ ekrau
-		observer.mouseStep.second = -step;
+	if (y < strip) {			// góra ekranu
+		observer.mouseStep.second = (float) (windowHeight - y) / 10000;
+	} else if (y > (windowHeight - strip)) {	// dó³ ekrau
+		observer.mouseStep.second = (float) -y / 10000;
 	} else {
 		observer.mouseStep.second = 0.0f;
+	}
+}
+
+void mouseEntry(int state) {
+	observer.mouseStep.first = 0.0f;
+	observer.mouseStep.second = 0.0f;
+}
+
+void mouse(int button, int state, int x, int y) {
+	if (button == 3) {
+		if (observer.fieldOfView > 0)	observer.setupProjection(--observer.fieldOfView, windowWidth, windowHeight);
+	} else if (button == 4) {
+		if (observer.fieldOfView < 180) observer.setupProjection(++observer.fieldOfView, windowWidth, windowHeight);
 	}
 }
 
@@ -105,8 +140,8 @@ void initGLUT(int *argc, char** argv) {
 	glutInit(argc, argv);
 	glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB | GLUT_DEPTH);
 	
-	glutInitWindowPosition(windowPositionX,windowPositionY);
-	glutInitWindowSize(windowWidth,windowHeight);
+	glutInitWindowPosition(windowPositionX, windowPositionY);
+	glutInitWindowSize(windowWidth, windowHeight);
 	glutCreateWindow("Wirtualna galeria alkoholi");
 	
 	glutReshapeFunc(changeSize);	// procedura obs³uguj¹ca zmianê rozmiaru okna
@@ -115,20 +150,27 @@ void initGLUT(int *argc, char** argv) {
 
 	glutKeyboardFunc(keyDown);
 	glutPassiveMotionFunc(mouseMove);
+	glutEntryFunc(mouseEntry);
+	glutMouseFunc(mouse);
 }
 
 void initOpenGL(float angle, int width, int height) {
 	observer.setupProjection(angle, width, height);
 	setupShaders();
 	glEnable(GL_DEPTH_TEST);
+	glEnable(GL_TEXTURE_2D);
+	glEnable(GL_LIGHT0);
 }
 
 void initModels(void) {
-	model = new Model(shaderProgram, "becherovka", vec3(0.0f, 0.0f, 0.0f));
+	models[0] = new Model(shaderProgram, "chivasregal", vec3(0.0f, 0.0f, 0.0f));
+	models[1] = new Model(shaderProgram, "pernod", vec3(-10.0f, 0.0f, 0.0f));
 }
 
 void cleanModels(void) {
-	delete model;
+	for (int i = 0; i < 18; i++) {
+		delete models[i];
+	}
 }
 
 int main(int argc, char* argv[]) {

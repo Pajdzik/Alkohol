@@ -8,7 +8,7 @@ using namespace glm;
 Observer::Observer(void) {
 	position.x = 0.0f;
 	position.y = 0.0f;
-	position.z = 57.0f;
+	position.z = 80.0f;
 
 	center.x = 0.0f;
 	center.y = 0.0f;
@@ -47,30 +47,21 @@ void Observer::setupProjection(float angle, int width, int height) {
 	projectionMatrix = perspective(angle, (float) width / (float) height, 0.01f, 200.0f);
 }
 
-void Observer::move(unsigned char c) {
-	const float step = 0.1;
+void Observer::move(float speed) {
+	vec3 diff = center - position;
 
-	switch (c) {
-	case 'a':	// lewo
-	case 'A':
-		position.x += step;
-		break;
+	position.x = position.x + diff.x * speed;
+	position.z = position.z + diff.z * speed;
 
-	case 'd':	// prawo
-	case 'D':
-		position.x -= step;
-		break;
+	center.x = center.x + diff.x * speed;
+	center.z = center.z + diff.z * speed;
+}
 
-	case 's':	// ty³
-	case 'S':
-		position.z += step;
-		break;
+void Observer::strafe(float speed) {
+	vec3 diff = center - position;
 
-	case 'w':	// przód
-	case 'W':
-		position.z -= step;
-		break;
-	}
+	center.x = (float) (position.x + cos(speed) * diff.x - sin(speed) * diff.z);
+	center.z = (float) (position.z + sin(speed) * diff.x + cos(speed) * diff.z);
 }
 
 void Observer::mouseMove(void) {

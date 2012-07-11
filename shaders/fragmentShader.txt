@@ -1,7 +1,13 @@
 #version 330
 
-out vec4 pixelColor;
+in vec2 texCoords;
+
+out vec4 color; //Zmienna wyjsciowa fragment shadera. Zapisuje sie do niej ostateczny (prawie) kolor piksela
+
+uniform sampler2D textureMap;
 
 void main(void) {
-	pixelColor = vec4(1.0, 0.0, 0.0, 1.0);
+	vec4 tex = texture(textureMap, texCoords);
+
+	color = tex;
 }

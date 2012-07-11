@@ -1,7 +1,7 @@
 #include "StdAfx.h"
 #include "Model.h"
 #include "ShaderProgram.h"
-#include "cube.h"
+#include "lib/SOIL/SOIL.h"
 
 using namespace std;
 using namespace glm;
@@ -9,23 +9,29 @@ using namespace glm;
 Model::Model(ShaderProgram *shaderProgram, string name, vec3 position) {
 	bool b = false;
 
-	string modelPath= "models/";
+	string modelPath = "models/";
 	modelPath.append(name);
+	modelPath.append(".obj");
 
 	printf("Loading %s\n",  name.c_str());
 
-	printf("\t Model...");
-	b = loadOBJ(modelPath.append(".obj").c_str(), vertices, uvs, normals);
+	printf("\t Model.....");
+	b = loadOBJ(modelPath.c_str(), vertices, uvs, normals);
 
 	if (b == true)	printf(" done!\n");
-	else			printf(" ERROR!\n");
+	else			printf(" ERROR!\n\n\n\n");
 	
 
+	string texturePath = "textures/tga/";
+	texturePath.append(name);
+	//texturePath.append(".jpg");
+	texturePath.append(".tga");
+
 	printf("\t Texture...");
+	b = loadTexture("textures/tga/dupa.png");
 
-
-	if (b == true)	printf(" done!\n");
-	else			printf(" ERROR!\n");
+	if (b == true)	printf(" done!\n\n");
+	else			printf(" ERROR!\n\n\n\n");
 
 
 	setupVBO();
@@ -51,6 +57,11 @@ void Model::draw(ShaderProgram *shaderProgram) {
 	
 
 	glUniformMatrix4fv(shaderProgram->getUniformLocation("M"), 1, false, value_ptr(modelMatrix));
+	glUniform1i(shaderProgram->getUniformLocation("textureMap"), 0);
+
+	glActiveTexture(GL_TEXTURE0);
+	glEnable(GL_TEXTURE_2D);
+	glBindTexture(GL_TEXTURE_2D, texture);
 
 	glBindVertexArray(vao);
 	glDrawArrays(GL_TRIANGLES, 0, vertices.size());
@@ -61,9 +72,9 @@ void Model::setupVAO(ShaderProgram *shaderProgram) {
 	//Procedura tworz¹ca VAO - "obiekt" OpenGL wi¹¿¹cy numery slotów atrybutów z buforami VBO
 
 	//Pobierz numery slotów poszczególnych atrybutów
-	GLuint locVertex = shaderProgram->getAttribLocation("vertex");		// "vertex" odnosi siê do deklaracji "in vec4 vertex;" w vertex shaderze
-	GLuint locColor	 = shaderProgram->getAttribLocation("color");		// "color" odnosi siê do deklaracji "in vec4 color;" w vertex shaderze
-	GLuint locNormal = shaderProgram->getAttribLocation("normal");		// "normal" odnosi siê do deklaracji "in vec4 normal;" w vertex shaderze
+	GLuint vertexLocation	= shaderProgram->getAttribLocation("vertex");		// "vertex" odnosi siê do deklaracji "in vec4 vertex;" w vertex shaderze
+	GLuint normalLocation	= shaderProgram->getAttribLocation("normal");		// "normal" odnosi siê do deklaracji "in vec4 normal;" w vertex shaderze
+	GLuint textureLocation	= shaderProgram->getAttribLocation("texture");
 
 	//Wygeneruj uchwyt na VAO i zapisz go do zmiennej globalnej
 	glGenVertexArrays(1,&vao);
@@ -72,43 +83,37 @@ void Model::setupVAO(ShaderProgram *shaderProgram) {
 	glBindVertexArray(vao);
 
 	glBindBuffer(GL_ARRAY_BUFFER, verticesBuffer);  //Uaktywnij wygenerowany uchwyt VBO 
-	glEnableVertexAttribArray(locVertex); //W³¹cz u¿ywanie atrybutu o numerze slotu zapisanym w zmiennej locVertex (atrybut "vertex")
-	glVertexAttribPointer(locVertex, 3, GL_FLOAT, GL_FALSE, 0, NULL); //Dane do slotu locVertex maj¹ byæ brane z aktywnego VBO
+	glEnableVertexAttribArray(vertexLocation); //W³¹cz u¿ywanie atrybutu o numerze slotu zapisanym w zmiennej vertexLocation (atrybut "vertex")
+	glVertexAttribPointer(vertexLocation, 3, GL_FLOAT, GL_FALSE, 0, NULL); //Dane do slotu vertexLocation maj¹ byæ brane z aktywnego VBO
 	
 	glBindBuffer(GL_ARRAY_BUFFER, uvsBuffer);  //Uaktywnij wygenerowany uchwyt VBO 
-	glEnableVertexAttribArray(locColor); //W³¹cz u¿ywanie atrybutu o numerze slotu zapisanym w zmiennej locColor (atrybut "color")
-	glVertexAttribPointer(locColor, 2, GL_FLOAT, GL_FALSE, 0, NULL); //Dane do slotu locColor maj¹ byæ brane z aktywnego VBO
+	glEnableVertexAttribArray(textureLocation); //W³¹cz u¿ywanie atrybutu o numerze slotu zapisanym w zmiennej colorLocation (atrybut "color")
+	glVertexAttribPointer(textureLocation, 2, GL_FLOAT, GL_FALSE, 0, NULL); //Dane do slotu colorLocation maj¹ byæ brane z aktywnego VBO
 
 	glBindBuffer(GL_ARRAY_BUFFER, normalsBuffer);  //Uaktywnij wygenerowany uchwyt VBO 
-	glEnableVertexAttribArray(locNormal); //W³¹cz u¿ywanie atrybutu o numerze slotu zapisanym w zmiennej locNormal (atrybut "normal")
-	glVertexAttribPointer(locNormal, 3, GL_FLOAT, GL_FALSE, 0, NULL); //Dane do slotu locNormal maj¹ byæ brane z aktywnego VBO
+	glEnableVertexAttribArray(normalLocation); //W³¹cz u¿ywanie atrybutu o numerze slotu zapisanym w zmiennej normalLocation (atrybut "normal")
+	glVertexAttribPointer(normalLocation, 3, GL_FLOAT, GL_FALSE, 0, NULL); //Dane do slotu normalLocation maj¹ byæ brane z aktywnego VBO
 
 	glBindVertexArray(0);
 }
 
 void Model::setupVBO(void) {
 	//Procedura tworz¹ca bufory VBO zawieraj¹ce dane z tablic opisuj¹cych rysowany obiekt.
-	//Wybór rysowanego modelu (poprzez zakomentowanie/odkomentowanie fragmentu kodu)
-	/*vertices = cubeVertices;
-	colors = cubeColors;
-	normals = cubeNormals;
-	vertexCount = cubeVertexCount;*/
 
 	//Wspó³rzêdne wierzcho³ków
 	glGenBuffers(1, &verticesBuffer);//Wygeneruj uchwyt na Vertex Buffer Object (VBO), który bêdzie zawiera³ tablicê wierzcho³ków
 	glBindBuffer(GL_ARRAY_BUFFER, verticesBuffer);  //Uaktywnij wygenerowany uchwyt VBO 
 	glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(vec3), &vertices[0], GL_STATIC_DRAW); //wgraj tablicê wierzcho³ków do VBO
 	
-	//Kolory wierzcho³ków
-	glGenBuffers(1, &uvsBuffer);//Wygeneruj uchwyt na Vertex Buffer Object (VBO), który bêdzie zawiera³ tablicê kolorów
-	glBindBuffer(GL_ARRAY_BUFFER, uvsBuffer);  //Uaktywnij wygenerowany uchwyt VBO 
-	glBufferData(GL_ARRAY_BUFFER, uvs.size() * sizeof(vec2), &uvs[0], GL_STATIC_DRAW); //wgraj tablicê kolorów do VBO
-	
 	//Wektory normalne wierzcho³ków
 	glGenBuffers(1, &normalsBuffer);//Wygeneruj uchwyt na Vertex Buffer Object (VBO), który bêdzie zawiera³ tablicê wektorów normalnych
 	glBindBuffer(GL_ARRAY_BUFFER, normalsBuffer);  //Uaktywnij wygenerowany uchwyt VBO 
 	glBufferData(GL_ARRAY_BUFFER, normals.size() * sizeof(vec3), &normals[0], GL_STATIC_DRAW); //wgraj tablicê wektorów normalnych do VBO
 	
+	//Kolory wierzcho³ków
+	glGenBuffers(1, &uvsBuffer);//Wygeneruj uchwyt na Vertex Buffer Object (VBO), który bêdzie zawiera³ tablicê kolorów
+	glBindBuffer(GL_ARRAY_BUFFER, uvsBuffer);  //Uaktywnij wygenerowany uchwyt VBO 
+	glBufferData(GL_ARRAY_BUFFER, uvs.size() * sizeof(vec2), &uvs[0], GL_STATIC_DRAW); //wgraj tablicê kolorów do VBO
 }
 
 bool Model::loadOBJ(const char *path, vector<vec3> &out_vertices, vector<vec2> &out_uvs, vector<vec3> &out_normals)
@@ -198,87 +203,20 @@ bool Model::loadOBJ(const char *path, vector<vec3> &out_vertices, vector<vec2> &
 	return true;
 }
 
-bool Model::loadBMP(const char *imagepath){
+bool Model::loadTexture(const char *path) {
+	GLuint textureID = SOIL_load_OGL_texture(path, SOIL_LOAD_AUTO, SOIL_CREATE_NEW_ID, SOIL_FLAG_INVERT_Y);
 
-	//printf("Reading image %s\n", imagepath);
-
-	// Data read from the header of the BMP file
-    unsigned char header[54];
-    unsigned int dataPos;
-	unsigned int imageSize;
-	unsigned int width, height;
-	// Actual RGB data
-	unsigned char * data;
-
-	// Open the file
-    FILE * file = fopen(imagepath,"rb");
-	if (!file)							    {printf("Image could not be opened.\n"); return 0;}
-
-	// Read the header, i.e. the 54 first bytes
-
-	// If less than 54 byes are read, problem
-    if ( fread(header, 1, 54, file)!=54 ){ 
-		fprintf(stderr, "Not a correct BMP file.\n");
+	if (textureID == NULL) {
 		return false;
+	} else {
+		glBindTexture( GL_TEXTURE_2D, textureID );
+		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
+		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
+		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT );
+		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT );
+		glBindTexture( GL_TEXTURE_2D, 0 );
+		 
+		texture = textureID;
+		return true;
 	}
-	// A BMP files always begins with "BM"
-    if ( header[0]!='B' || header[1]!='M' ){
-		fprintf(stderr, "Not a correct BMP file.\n");
-		return false;
-	}
-	// Make sure this is a 24bpp file
-    if ( *(int*)&(header[0x1E])!=0  )         {fprintf(stderr, "Not a correct BMP file.\n");    return false;}
-    if ( *(int*)&(header[0x1C])!=24 )         {fprintf(stderr, "Not a correct BMP file.\n");    return false;}
-
-	// Read the information about the image
-    dataPos    = *(int*)&(header[0x0A]);
-    imageSize  = *(int*)&(header[0x22]);
-    width      = *(int*)&(header[0x12]);
-    height     = *(int*)&(header[0x16]);
-
-	// Some BMP files are misformatted, guess missing information
-    if (imageSize==0)    imageSize=width*height*3; // 3 : one byte for each Red, Green and Blue component
-    if (dataPos==0)      dataPos=54; // The BMP header is done that way
-
-	// Create a buffer
-    data = new unsigned char [imageSize];
-
-	// Read the actual data from the file into the buffer
-    fread(data,1,imageSize,file);
-
-	// Everything is in memory now, the file wan be closed
-    fclose (file);
-
-	// Create one OpenGL texture
-	GLuint textureID;
-	glGenTextures(1, &textureID);
-	
-	// "Bind" the newly created texture : all future texture functions will modify this texture
-	glBindTexture(GL_TEXTURE_2D, textureID);
-
-	// Give the image to OpenGL
-	glTexImage2D(GL_TEXTURE_2D, 0,GL_RGB, width, height, 0, GL_BGR, GL_UNSIGNED_BYTE, data);
-
-	// Poor filtering, or ...
-	//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-	//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST); 
-
-	// ... nice trilinear filtering.
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR); 
-	glGenerateMipmap(GL_TEXTURE_2D);
-
-	// Return the ID of the texture we just created
-    this->Texture = textureID;
-    return true;
-}
-
-GLbyte* loadTGA(char *fileName, GLint *width, GLint *height, GLint *components, GLenum *format) {
-	FILE *file = 0;				// wskaŸnik na plik
-	TGAHEADER tgaHeader;	// nag³ówek pliku TGA
-	unsigned long imageSize;
-	short depth;
-	GLbyte *bits = NULL;
 }

@@ -26,8 +26,9 @@ public:
 
 	void set(ShaderProgram *shaderProgram);
 	void setupProjection(float angle, int width, int height);
-	void move(unsigned char c);
-
+	void move(float speed);
+	void strafe(float speed);
+	
 private:
 	void mouseMove(void);
 };
