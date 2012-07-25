@@ -1,6 +1,10 @@
 #version 330
 
 in vec2 texCoords;
+in vec3 brightness;
+in vec4 iV;
+in vec4 iN;
+in vec4 iL;
 
 out vec4 color; //Zmienna wyjsciowa fragment shadera. Zapisuje sie do niej ostateczny (prawie) kolor piksela
 
@@ -9,5 +13,20 @@ uniform sampler2D textureMap;
 void main(void) {
 	vec4 tex = texture(textureMap, texCoords);
 
-	color = tex;
+	vec4 eyeN=normalize(iN);
+	vec4 eyeV=normalize(iV);
+	vec4 eyeL=normalize(iL);
+	vec4 eyeR=reflect(-eyeL,eyeN);
+
+	float shininess = 25;
+	float nl = max(0, dot(eyeL, eyeN));
+	float rv = pow(max(0, dot(eyeR, eyeV)), shininess);
+
+	vec4 La=vec4(1, 1, 1, 1); //kolor swiatla otoczenia
+	vec4 Ma=vec4(0, 0, 1, 0); //kolor materialu dla swiatla otoczenia
+	vec4 Ld=vec4(1, 1, 1, 1); //kolor swiatla rozpraszanego
+	vec4 Md=texture(textureMap, texCoords);            //kolor materialu dla swiatla rozpraszanego
+	vec4 Ls=vec4(1,1,1,0); //kolor swiatla odbijanego
+
+	color = (La * Ma) + (Ld * Md * nl) + (Ls * rv);
 }

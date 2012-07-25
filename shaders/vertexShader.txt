@@ -9,8 +9,20 @@ in vec4 normal;
 in vec2 texture;
 
 out vec2 texCoords;
+out vec3 brightness;
+
+out vec4 iV;
+out vec4 iN;
+out vec4 iL;
+out vec4 iC;
 
 void main(void) {
 	gl_Position = P * V * M * vertex;
 	texCoords = texture;
+
+	vec4 lp=vec4(0,0,7,1);
+
+	iN = normalize(V*M*normal); //wektor normalny w przestrzeni oka
+	iV = normalize(vec4(0,0,0,1)-V*M*vertex); //wektor do obserwatora w przestrzeni oka
+	iL = normalize(V*lp-V*M*vertex);//wektor do swiatla w przestrzeni oka
 }
