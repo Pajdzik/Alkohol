@@ -1,4 +1,5 @@
 #pragma once
+
 #include "stdafx.h"
 #include "ShaderProgram.h"
 
@@ -15,9 +16,8 @@ public:
 	vec3 nose;
 
 	pair<int, int> mouse;
-	pair<float, float> mouseStep;
-
-	//float angle;
+	float moveStep;
+	float strafeStep;
 
 	mat4 viewMatrix;
 	mat4 projectionMatrix;
@@ -26,10 +26,15 @@ public:
 
 	void set(ShaderProgram *shaderProgram);
 	void setupProjection(float angle, int width, int height);
-	void move(float speed);
-	void strafe(float speed);
+	void move(void);
 	
 private:
+	const int windowHeight;
+	const int windowWidth;
+
+	void moveForward(float speed);
+	void strafe(float speed);
 	void mouseMove(void);
+	void shift(float speed);
 };
 

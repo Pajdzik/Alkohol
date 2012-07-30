@@ -3,6 +3,7 @@
 #include "stdafx.h"
 #include "Alkohol.h"
 
+
 using namespace std;
 using namespace glm;
 
@@ -14,6 +15,7 @@ void setupShaders(void);
 
 void cleanModels(void);
 void cleanShaders(void);
+void quit(void);
 
 void changeSize(int, int);
 void displayFrame(void);
@@ -26,7 +28,7 @@ void mouseMove(int x, int y);
 
 
 void displayFrame(void) {
-	glClearColor(0.0, 0.0, 0.0, 1.0);			// wyczyœæ bufor kolorów i bufor g³êbokoœci
+	glClearColor(0.9, 0.9, 0.9, 1.0);			// wyczyœæ bufor kolorów i bufor g³êbokoœci
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	observer.set(shaderProgram);
@@ -37,75 +39,93 @@ void displayFrame(void) {
 }
 
 void drawObject(void) {
-	models[0]->draw(shaderProgram);
-	models[1]->draw(shaderProgram);
-	
+	for (int i = 0; i < bottleCount; i++) {
+		bottles[i]->draw(shaderProgram);
+	}
+
+	table->draw(shaderProgram);
 }
 
 void nextFrame(void) {
-	// procedura uruchamiana okresowo. Robi animacjê.
-	int actTime = glutGet(GLUT_ELAPSED_TIME);
-	int interval = actTime - lastTime;
-
-	lastTime = actTime;
-	models[0]->angle += speed * interval / 1000.0;
+	observer.move();
 
 	glutPostRedisplay();
 }
 
-void keyDown(unsigned char c, int x, int y) {
-	const float speed = 0.01f;
+void pick(int sx, int sy) {
 
-	switch (c) {
+}
+
+void keyDown(unsigned char key, int x, int y) {
+	const float speed = 0.03f;
+
+	switch (key) {
 	case 'a':	// lewo
 	case 'A':
-		observer.strafe(-speed);
+		observer.strafeStep = -speed;
 		break;
 
 	case 'd':	// prawo
 	case 'D':
-		observer.strafe(speed);
+		observer.strafeStep = +speed;
 		break;
 
 	case 's':	// ty³
 	case 'S':
-		observer.move(-speed);
+		observer.moveStep = -speed;
 		break;
 
 	case 'w':	// przód
 	case 'W':
-		observer.move(speed);
+		observer.moveStep = speed;
+		break;
+
+	case 27:	// escape
+		quit();
+		exit(0);
 		break;
 	}
 }
 
-void mouseMove(int x, int y) {
-	const unsigned char strip = 180;
+void keyUp(unsigned char key, int x, int y) {
+	switch (key) {
+	case 'a':	// lewo
+	case 'A':
+		observer.strafeStep = 0.0f;
+		break;
 
-	if (x < strip) {			// lewa strona ekranu
-		observer.mouseStep.first = (float) -(windowWidth - x) / 10000;
-	} else if (x > (windowWidth - strip)) {	// prawa strona ekranu
-		observer.mouseStep.first = (float) x / 10000;
-	} else {
-		observer.mouseStep.first = 0.0f;
-	}
+	case 'd':	// prawo
+	case 'D':
+		observer.strafeStep = 0.0f;
+		break;
 
-	if (y < strip) {			// góra ekranu
-		observer.mouseStep.second = (float) (windowHeight - y) / 10000;
-	} else if (y > (windowHeight - strip)) {	// dó³ ekrau
-		observer.mouseStep.second = (float) -y / 10000;
-	} else {
-		observer.mouseStep.second = 0.0f;
+	case 's':	// ty³
+	case 'S':
+		observer.moveStep = 0.0f;
+		break;
+
+	case 'w':	// przód
+	case 'W':
+		observer.moveStep = 0.0f;
+		break;
 	}
 }
 
-void mouseEntry(int state) {
-	observer.mouseStep.first = 0.0f;
-	observer.mouseStep.second = 0.0f;
+void keySpecialUp(int key, int x, int y) {
+	switch (key) {
+	
+	}
+}
+
+void mouseMove(int x, int y) {
+	observer.mouse.first = x;
+	observer.mouse.second = y;
 }
 
 void mouse(int button, int state, int x, int y) {
-	if (button == 3) {
+	if (button = GLUT_LEFT_BUTTON) {
+		pick(x, y);
+	} else if (button == 3) {		// rolka
 		if (observer.fieldOfView > 0)	observer.setupProjection(--observer.fieldOfView, windowWidth, windowHeight);
 	} else if (button == 4) {
 		if (observer.fieldOfView < 180) observer.setupProjection(++observer.fieldOfView, windowWidth, windowHeight);
@@ -136,7 +156,6 @@ void initGLEW(void) {
 }
 
 void initGLUT(int *argc, char** argv) {
-	//Procedura inicjuj¹ca biblotekê glut
 	glutInit(argc, argv);
 	glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB | GLUT_DEPTH);
 	
@@ -149,9 +168,13 @@ void initGLUT(int *argc, char** argv) {
 	glutIdleFunc(nextFrame);		// procedura wywo³uj¹ca najczêœciaj jak siê da (animacja)
 
 	glutKeyboardFunc(keyDown);
+	glutKeyboardUpFunc(keyUp);
+	glutSpecialFunc(keySpecialUp);
+
 	glutPassiveMotionFunc(mouseMove);
-	glutEntryFunc(mouseEntry);
 	glutMouseFunc(mouse);
+
+	glutWarpPointer(windowWidth / 2, windowHeight / 2);
 }
 
 void initOpenGL(float angle, int width, int height) {
@@ -163,14 +186,44 @@ void initOpenGL(float angle, int width, int height) {
 }
 
 void initModels(void) {
-	models[0] = new Model(shaderProgram, "chivasregal", vec3(0.0f, 0.0f, 0.0f));
-	models[1] = new Model(shaderProgram, "pernod", vec3(-10.0f, 0.0f, 0.0f));
+	printf("Loading models... \n\n");
+
+	const float radius = 70.0f;
+	const float alfa = 10.0f; // 360.0 / (bottleCount / 2 - 2);
+
+	float angle = 0.0f;
+
+	bottles[absolut]		= new Bottle(shaderProgram, new AlcInfo("absolut", "wódka", 40), vec3(radius * cos(angle), 0.0f, radius * sin(angle)));				angle += alfa;
+	bottles[baileys]		= new Bottle(shaderProgram, new AlcInfo("baileys", "likier", 17), vec3(radius * cos(angle), 0.0f, radius * sin(angle)));			angle += alfa;
+	bottles[becherovka]		= new Bottle(shaderProgram, new AlcInfo("becherovka", "likier", 38), vec3(radius * cos(angle), 0.0f, radius * sin(angle)));			angle += alfa;
+	bottles[beefeater]		= new Bottle(shaderProgram, new AlcInfo("beefeater", "gin", 47), vec3(radius * cos(angle), 0.0f, radius * sin(angle)));				angle += alfa;
+	bottles[chivasregal]	= new Bottle(shaderProgram, new AlcInfo("chivasregal", "whisky", 40), vec3(radius * cos(angle), 0.0f, radius * sin(angle)));		angle += alfa;
+	bottles[cointreau]		= new Bottle(shaderProgram, new AlcInfo("cointreau", "likier", 40), vec3(radius * cos(angle), 0.0f, radius * sin(angle)));			angle += alfa;
+	bottles[curacao]		= new Bottle(shaderProgram, new AlcInfo("curacao", "likier", 30), vec3(radius * cos(angle), 0.0f, radius * sin(angle)));			angle += alfa;
+	bottles[havanaclub]		= new Bottle(shaderProgram, new AlcInfo("havanaclub", "rum", 40), vec3(radius * cos(angle), 0.0f, radius * sin(angle)));			angle += alfa;
+	bottles[jackdaniels]	= new Bottle(shaderProgram, new AlcInfo("jackdaniels", "whiskey", 40), vec3(radius * cos(angle), 0.0f, radius * sin(angle)));		angle += alfa;
+	bottles[jagermeister]	= new Bottle(shaderProgram, new AlcInfo("jagermeister", "likier", 35), vec3(radius * cos(angle), 0.0f, radius * sin(angle)));		angle += alfa;
+	bottles[jameson]		= new Bottle(shaderProgram, new AlcInfo("jameson", "whiskey", 40), vec3(radius * cos(angle), 0.0f, radius * sin(angle)));			angle += alfa;
+	bottles[kahlua]			= new Bottle(shaderProgram, new AlcInfo("kahlua", "likier", 20), vec3(radius * cos(angle), 0.0f, radius * sin(angle)));				angle += alfa;
+	bottles[malibu]			= new Bottle(shaderProgram, new AlcInfo("malibu", "likier", 21), vec3(radius * cos(angle), 0.0f, radius * sin(angle)));				angle += alfa;
+	bottles[martell]		= new Bottle(shaderProgram, new AlcInfo("martell", "koniak", 40), vec3(radius * cos(angle), 0.0f, radius * sin(angle)));			angle += alfa;
+	bottles[molinari]		= new Bottle(shaderProgram, new AlcInfo("molinari", "likier", 42), vec3(radius * cos(angle), 0.0f, radius * sin(angle)));			angle += alfa;
+	bottles[olmeca]			= new Bottle(shaderProgram, new AlcInfo("olmeca", "tequila", 38), vec3(radius * cos(angle), 0.0f, radius * sin(angle)));			angle += alfa;
+	bottles[pernod]			= new Bottle(shaderProgram, new AlcInfo("pernod", "likier", 40),	vec3(radius * cos(angle), 0.0f, radius * sin(angle)));			angle += alfa;
+	bottles[ramazzotti]		= new Bottle(shaderProgram, new AlcInfo("ramazzotti", "likier", 30),	vec3(radius * cos(angle), 0.0f, radius * sin(angle)));
+
+	table = new Model(shaderProgram, "untitled",  vec3(0, 0, 30));
 }
 
 void cleanModels(void) {
 	for (int i = 0; i < 18; i++) {
-		delete models[i];
+		delete bottles[i];
 	}
+}
+
+void quit(void) {
+	cleanShaders();
+	cleanModels();
 }
 
 int main(int argc, char* argv[]) {
@@ -181,8 +234,7 @@ int main(int argc, char* argv[]) {
 	
 	glutMainLoop();
 
-	cleanShaders();
-	cleanModels();
+	quit();
 
 	return 0;
 }

@@ -78,7 +78,9 @@
     <None Include="shaders\vertexShader.txt" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="AlcInfo.h" />
     <ClInclude Include="Alkohol.h" />
+    <ClInclude Include="Bottle.h" />
     <ClInclude Include="Model.h" />
     <ClInclude Include="Observer.h" />
     <ClInclude Include="ShaderProgram.h" />
@@ -86,7 +88,9 @@
     <ClInclude Include="targetver.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="AlcInfo.cpp" />
     <ClCompile Include="Alkohol.cpp" />
+    <ClCompile Include="Bottle.cpp" />
     <ClCompile Include="Model.cpp" />
     <ClCompile Include="Observer.cpp" />
     <ClCompile Include="ShaderProgram.cpp" />

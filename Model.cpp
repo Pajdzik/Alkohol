@@ -6,8 +6,15 @@
 using namespace std;
 using namespace glm;
 
+unsigned char Model::baseColor[3] = { 0, 0, 0 };
+
 Model::Model(ShaderProgram *shaderProgram, string name, vec3 position) {
 	bool b = false;
+
+	angle = 10.0f;
+
+	this->position = position;
+	this->name = name;
 
 	string modelPath = "models/";
 	modelPath.append(name);
@@ -24,8 +31,7 @@ Model::Model(ShaderProgram *shaderProgram, string name, vec3 position) {
 
 	string texturePath = "textures/tga/";
 	texturePath.append(name);
-	//texturePath.append(".jpg");
-	texturePath.append(".tga");
+	texturePath.append(".jpg");
 
 	printf("\t Texture...");
 	b = loadTexture("textures/tga/dupa.png");
@@ -36,10 +42,9 @@ Model::Model(ShaderProgram *shaderProgram, string name, vec3 position) {
 
 	setupVBO();
 	setupVAO(shaderProgram);
+	setupColor();
 
-	angle = 10.0f;
-
-	this->position = position;
+	printf("%d %d %d \n", color[0], color[1], color[2]);
 }
 
 Model::~Model(void) {
@@ -66,6 +71,9 @@ void Model::draw(ShaderProgram *shaderProgram) {
 	glBindVertexArray(vao);
 	glDrawArrays(GL_TRIANGLES, 0, vertices.size());
 	glBindVertexArray(0);
+}
+
+void Model::pick(void) {
 }
 
 void Model::setupVAO(ShaderProgram *shaderProgram) {
@@ -114,6 +122,21 @@ void Model::setupVBO(void) {
 	glGenBuffers(1, &uvsBuffer);//Wygeneruj uchwyt na Vertex Buffer Object (VBO), który bêdzie zawiera³ tablicê kolorów
 	glBindBuffer(GL_ARRAY_BUFFER, uvsBuffer);  //Uaktywnij wygenerowany uchwyt VBO 
 	glBufferData(GL_ARRAY_BUFFER, uvs.size() * sizeof(vec2), &uvs[0], GL_STATIC_DRAW); //wgraj tablicê kolorów do VBO
+}
+
+void Model::setupColor(void) {
+	color[0] = baseColor[0];
+	color[1] = baseColor[1];
+	color[2] = baseColor[2];
+
+	if (baseColor[0]++ == 255) {
+		baseColor[0] = 0;
+
+		if (baseColor[1]++ == 255) {
+			baseColor[1] = 0;
+			baseColor[2]++;
+		}
+	}
 }
 
 bool Model::loadOBJ(const char *path, vector<vec3> &out_vertices, vector<vec2> &out_uvs, vector<vec3> &out_normals)

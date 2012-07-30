@@ -1,6 +1,8 @@
 #pragma once
+
 #include "stdafx.h"
 #include "ShaderProgram.h"
+#include "AlcInfo.h"
 
 
 using namespace std;
@@ -10,6 +12,11 @@ class Model {
 public:
 	Model(ShaderProgram *shaderProgram, string name, vec3 position);
 	~Model(void);
+
+	static unsigned char baseColor[3];
+
+	string name;
+	unsigned char color[3];		// unikalny kolor do pickingu
 
 	mat4 modelMatrix;
 
@@ -23,19 +30,19 @@ public:
 	int verticesCount;
 
 	GLuint texture;
-
-		// uchwyty na VAO i bufory wierzcho³ków
-	GLuint	vao;
-	GLuint	verticesBuffer;			// uchwyt na bufor VBO przechowuj¹cy tablicê wspó³rzêdnych wierzcho³ków
-	GLuint	uvsBuffer;				// uchwyt na bufor VBO przechowuj¹cy tablicê kolorów
-	GLuint	normalsBuffer;			// uchwyt na bufor VBO przechowuj¹cy tablicê wektorów normalnych
+	GLuint vao;
+	GLuint verticesBuffer;
+	GLuint uvsBuffer;
+	GLuint normalsBuffer;
 
 
 	void draw(ShaderProgram *shaderProgram);
+	void pick(void);
 	bool loadOBJ(const char *path, vector<vec3> &out_vertices, vector<vec2> &out_uvs, vector<vec3> &out_normals);
 	bool loadBMP(const char *imagepath);
 	bool loadTexture(const char *path);
 	void setupVAO(ShaderProgram *shaderProgram);
 	void setupVBO(void);
+	void setupColor(void);
 };
 
