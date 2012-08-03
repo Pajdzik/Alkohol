@@ -18,7 +18,14 @@ float speed = 120.0f; //120 stopni/s
 int lastTime = 0.0f;
 
 Bottle *bottles[bottleCount];
-Model *table;
+Model	*barrel,
+		*chair,
+		*counter,
+		*desk,
+		*ground,
+		*table,
+		*table2,
+		*room;
 Observer observer;
 ShaderProgram *shaderProgram;
 

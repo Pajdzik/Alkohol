@@ -20,11 +20,3 @@
 #include "lib/glm/glm.hpp"
 #include "lib/glm/gtc/matrix_transform.hpp"
 #include "lib/glm/gtc/type_ptr.hpp"
-//#include "tga.h"
-
-// TODO: reference additional headers your program requires here
-
-#define FORWARD 0
-#define BACKWARD 1
-#define LEFT 2
-#define RIGHT 3

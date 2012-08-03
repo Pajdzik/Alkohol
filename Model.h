@@ -37,12 +37,10 @@ public:
 
 
 	void draw(ShaderProgram *shaderProgram);
-	void pick(void);
 	bool loadOBJ(const char *path, vector<vec3> &out_vertices, vector<vec2> &out_uvs, vector<vec3> &out_normals);
 	bool loadBMP(const char *imagepath);
 	bool loadTexture(const char *path);
 	void setupVAO(ShaderProgram *shaderProgram);
 	void setupVBO(void);
-	void setupColor(void);
 };
 

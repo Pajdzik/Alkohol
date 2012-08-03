@@ -29,12 +29,12 @@ Model::Model(ShaderProgram *shaderProgram, string name, vec3 position) {
 	else			printf(" ERROR!\n\n\n\n");
 	
 
-	string texturePath = "textures/tga/";
+	string texturePath = "textures/";
 	texturePath.append(name);
 	texturePath.append(".jpg");
 
 	printf("\t Texture...");
-	b = loadTexture("textures/tga/dupa.png");
+	b = loadTexture(texturePath.c_str());
 
 	if (b == true)	printf(" done!\n\n");
 	else			printf(" ERROR!\n\n\n\n");
@@ -42,9 +42,6 @@ Model::Model(ShaderProgram *shaderProgram, string name, vec3 position) {
 
 	setupVBO();
 	setupVAO(shaderProgram);
-	setupColor();
-
-	printf("%d %d %d \n", color[0], color[1], color[2]);
 }
 
 Model::~Model(void) {
@@ -57,9 +54,7 @@ Model::~Model(void) {
 }
 
 void Model::draw(ShaderProgram *shaderProgram) {
-	modelMatrix = translate(mat4(1.0f), position); 
-	modelMatrix = rotate(modelMatrix, angle, vec3(0.5f, 1.0f, 0.0f)); 
-	
+	modelMatrix = translate(mat4(1.0f), position); 	
 
 	glUniformMatrix4fv(shaderProgram->getUniformLocation("M"), 1, false, value_ptr(modelMatrix));
 	glUniform1i(shaderProgram->getUniformLocation("textureMap"), 0);
@@ -73,9 +68,6 @@ void Model::draw(ShaderProgram *shaderProgram) {
 	glBindVertexArray(0);
 }
 
-void Model::pick(void) {
-}
-
 void Model::setupVAO(ShaderProgram *shaderProgram) {
 	//Procedura tworz¹ca VAO - "obiekt" OpenGL wi¹¿¹cy numery slotów atrybutów z buforami VBO
 
@@ -85,7 +77,7 @@ void Model::setupVAO(ShaderProgram *shaderProgram) {
 	GLuint textureLocation	= shaderProgram->getAttribLocation("texture");
 
 	//Wygeneruj uchwyt na VAO i zapisz go do zmiennej globalnej
-	glGenVertexArrays(1,&vao);
+	glGenVertexArrays(1, &vao);
 
 	//Uaktywnij nowo utworzony VAO
 	glBindVertexArray(vao);
@@ -122,21 +114,6 @@ void Model::setupVBO(void) {
 	glGenBuffers(1, &uvsBuffer);//Wygeneruj uchwyt na Vertex Buffer Object (VBO), który bêdzie zawiera³ tablicê kolorów
 	glBindBuffer(GL_ARRAY_BUFFER, uvsBuffer);  //Uaktywnij wygenerowany uchwyt VBO 
 	glBufferData(GL_ARRAY_BUFFER, uvs.size() * sizeof(vec2), &uvs[0], GL_STATIC_DRAW); //wgraj tablicê kolorów do VBO
-}
-
-void Model::setupColor(void) {
-	color[0] = baseColor[0];
-	color[1] = baseColor[1];
-	color[2] = baseColor[2];
-
-	if (baseColor[0]++ == 255) {
-		baseColor[0] = 0;
-
-		if (baseColor[1]++ == 255) {
-			baseColor[1] = 0;
-			baseColor[2]++;
-		}
-	}
 }
 
 bool Model::loadOBJ(const char *path, vector<vec3> &out_vertices, vector<vec2> &out_uvs, vector<vec3> &out_normals)
@@ -227,7 +204,7 @@ bool Model::loadOBJ(const char *path, vector<vec3> &out_vertices, vector<vec2> &
 }
 
 bool Model::loadTexture(const char *path) {
-	GLuint textureID = SOIL_load_OGL_texture(path, SOIL_LOAD_AUTO, SOIL_CREATE_NEW_ID, SOIL_FLAG_INVERT_Y);
+	GLuint textureID = SOIL_load_OGL_texture(path, SOIL_LOAD_AUTO, SOIL_CREATE_NEW_ID, SOIL_LOAD_AUTO);
 
 	if (textureID == NULL) {
 		return false;

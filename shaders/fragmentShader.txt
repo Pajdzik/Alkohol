@@ -1,32 +1,42 @@
 #version 330
 
 in vec2 texCoords;
-in vec3 brightness;
+in vec4 observerPos;
+in vec4 eye;
 in vec4 iV;
 in vec4 iN;
-in vec4 iL;
+in vec4 iL1;
+in vec4 iL2;
 
 out vec4 color; //Zmienna wyjsciowa fragment shadera. Zapisuje sie do niej ostateczny (prawie) kolor piksela
 
 uniform sampler2D textureMap;
 
+vec4 light1 = vec4(0, 100, 0, 1),							// wspó³rzêdne œwiat³a
+	 light2 = vec4(1, 100, 1, 1);
+
+float shininess = 0.5;
+
 void main(void) {
+	vec4 N = normalize(iN);
+	vec4 V = normalize(iV);
+	vec4 L1 = normalize(iL1);
+	vec4 L2 = normalize(iL2);
+	vec4 R1 = reflect(L1, N);
+	vec4 R2 = reflect(L2, N);
+
+	float nl1 = max(0.0, dot(L1, N));
+	float nl2 = max(0.0, dot(L2, N));
+	float rv1 = pow(max(0.1, dot(N, V)), shininess);
+	float rv2 = pow(max(0.1, dot(R2, V)), shininess); 
+
 	vec4 tex = texture(textureMap, texCoords);
+	vec4 La = vec4(0.1, 0.05, 0.02, 0.0);
+	vec4 Ma = vec4(1.0, 1.0, 1.0, 0.0);
+	vec4 Ld = vec4(1, 1, 0.8, 1);
+	vec4 Ls = vec4(1, 1, 1, 0);
 
-	vec4 eyeN=normalize(iN);
-	vec4 eyeV=normalize(iV);
-	vec4 eyeL=normalize(iL);
-	vec4 eyeR=reflect(-eyeL,eyeN);
 
-	float shininess = 25;
-	float nl = max(0, dot(eyeL, eyeN));
-	float rv = pow(max(0, dot(eyeR, eyeV)), shininess);
-
-	vec4 La=vec4(1, 1, 1, 1); //kolor swiatla otoczenia
-	vec4 Ma=vec4(0, 0, 1, 0); //kolor materialu dla swiatla otoczenia
-	vec4 Ld=vec4(1, 1, 1, 1); //kolor swiatla rozpraszanego
-	vec4 Md=texture(textureMap, texCoords);            //kolor materialu dla swiatla rozpraszanego
-	vec4 Ls=vec4(1,1,1,0); //kolor swiatla odbijanego
-
-	color = (La * Ma) + (Ld * Md * nl) + (Ls * rv);
+	//color = (La * Ma) + (Ld * tex * (nl1)) + (Ls * tex * (rv1));
+	color = vec4(0.1, 0.1, 0.1, 1.0) * rv1 + tex;
 }

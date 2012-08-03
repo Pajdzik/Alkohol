@@ -15,9 +15,13 @@ public:
 	vec3 center;
 	vec3 nose;
 
+	GLuint obsBuffer;
+	GLuint vao;
+
 	pair<int, int> mouse;
 	float moveStep;
 	float strafeStep;
+	bool focused;
 
 	mat4 viewMatrix;
 	mat4 projectionMatrix;
