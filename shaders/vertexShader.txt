@@ -25,10 +25,11 @@ void main(void) {
 	gl_Position = P * V * M * vertex;
 	eye = normalize(-gl_Position);
 	texCoords = texture;
+	vec4 obs = observer + vec4(0, 100, 0, 0);
 	observerPos = observer * light1;
 
 	iN = normalize(V*M*normal);						//wektor normalny w przestrzeni oka
-	iV = normalize(V*observer - V*M*vertex);		//wektor do obserwatora w przestrzeni oka
+	iV = normalize(obs - V*M*vertex);		//wektor do obserwatora w przestrzeni oka
 	iL1 = normalize(V*light1 - V*M*vertex);			//wektor do swiatla w przestrzeni oka
-	iL2 = normalize(V*light2 - V*M*vertex);
+	iL2 = normalize(V*observer*light2 - V*M*vertex);
 }

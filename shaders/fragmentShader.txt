@@ -15,7 +15,7 @@ uniform sampler2D textureMap;
 vec4 light1 = vec4(0, 100, 0, 1),							// wspó³rzêdne œwiat³a
 	 light2 = vec4(1, 100, 1, 1);
 
-float shininess = 0.5;
+float shininess = 2;
 
 void main(void) {
 	vec4 N = normalize(iN);
@@ -25,19 +25,21 @@ void main(void) {
 	vec4 R1 = reflect(L1, N);
 	vec4 R2 = reflect(L2, N);
 
-	float nl1 = max(0.1, dot(L1, N));
+	float nl1 = max(0.0, dot(L1, N));
 	float nl2 = max(0.0, dot(L2, N));
-	float rv1 = pow(max(0.1, dot(N, V)), shininess);
-	float rv2 = pow(max(0.1, dot(R2, V)), shininess); 
+	float rv1 = pow(max(0.0, dot(R1, V)), shininess);
+	float rv2 = pow(max(0.0, dot(R2, V)), shininess); 
 
 	vec4 tex = texture(textureMap, texCoords);
-	vec4 La = vec4(0.1, 0.05, 0.02, 0.0);
-	vec4 Ma = vec4(1.0, 1.0, 1.0, 0.0);
-	vec4 Ld = vec4(1, 1, 0.8, 1);
-	vec4 Ls = vec4(1, 1, 1, 0);
+	vec4 La = vec4(0.0, 0.0, 0.0, 0.0);
+	vec4 Ma = vec4(0.0, 0.0, 0.0, 0.0);
+	vec4 Ld = vec4(1.0, 1.0, 1.0, 1.0);
+	vec4 Ls = vec4(1.0, 1.0, 1.0, 0.0);
+
+
+	//color = (La * Ma) + (Ld * tex) + (Ls * rv1);
 
 	//color = (La * Ma) + vec3(0.2, 0.2, 0.2) * (Ld * tex * (nl1)) + (Ls * tex * (rv1));
 	//color = vec4(0.1, 0.1, 0.1, 1.0) * rv1 + tex;
-
 	color = vec4(mix(tex, tex, 0.5).rgb, 1.0);
 }
