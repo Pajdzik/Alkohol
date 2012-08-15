@@ -10,7 +10,7 @@ using namespace glm;
 
 class Model {
 public:
-	Model(ShaderProgram *shaderProgram, string name, vec3 position);
+	Model(ShaderProgram *shaderProgram, string name, vec3 position, float angle);
 	~Model(void);
 
 	static unsigned char baseColor[3];

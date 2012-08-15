@@ -17,18 +17,18 @@ out vec4 iN;
 out vec4 iL1;
 out vec4 iL2;
 
-vec4 light1 = vec4(0, 20, -40, 1),							// wspó³rzêdne œwiat³a
-	 light2 = vec4(0, 20, 40, 1);
+vec4 light1 = vec4(0, 100, 0, 1),							// wspó³rzêdne œwiat³a
+	 light2 = vec4(1, 100, 1, 1);
 
 
 void main(void) {
 	gl_Position = P * V * M * vertex;
 	eye = normalize(-gl_Position);
 	texCoords = texture;
-	observerPos = observer;
+	observerPos = observer * light1;
 
-	iN = normalize(V*M*normal);				//wektor normalny w przestrzeni oka
-	iV = normalize(observer - V*M*vertex);		//wektor do obserwatora w przestrzeni oka
+	iN = normalize(V*M*normal);						//wektor normalny w przestrzeni oka
+	iV = normalize(V*observer - V*M*vertex);		//wektor do obserwatora w przestrzeni oka
 	iL1 = normalize(V*light1 - V*M*vertex);			//wektor do swiatla w przestrzeni oka
 	iL2 = normalize(V*light2 - V*M*vertex);
 }

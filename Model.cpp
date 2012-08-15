@@ -8,10 +8,10 @@ using namespace glm;
 
 unsigned char Model::baseColor[3] = { 0, 0, 0 };
 
-Model::Model(ShaderProgram *shaderProgram, string name, vec3 position) {
+Model::Model(ShaderProgram *shaderProgram, string name, vec3 position, float angle) {
 	bool b = false;
 
-	angle = 10.0f;
+	this->angle = angle;
 
 	this->position = position;
 	this->name = name;
@@ -55,6 +55,7 @@ Model::~Model(void) {
 
 void Model::draw(ShaderProgram *shaderProgram) {
 	modelMatrix = translate(mat4(1.0f), position); 	
+	modelMatrix = rotate(modelMatrix, angle, vec3(0.0f, 1.0f, 0.0f));
 
 	glUniformMatrix4fv(shaderProgram->getUniformLocation("M"), 1, false, value_ptr(modelMatrix));
 	glUniform1i(shaderProgram->getUniformLocation("textureMap"), 0);

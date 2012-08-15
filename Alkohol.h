@@ -19,12 +19,11 @@ int lastTime = 0.0f;
 
 Bottle *bottles[bottleCount];
 Model	*barrel,
-		*chair,
+		*chair[4],
 		*counter,
 		*desk,
 		*ground,
-		*table,
-		*table2,
+		*table[2],
 		*room;
 Observer observer;
 ShaderProgram *shaderProgram;
